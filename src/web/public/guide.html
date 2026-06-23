@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RubiMorph 1.0.0 使用ガイド</title>
+  <meta name="description" content="RubiMorphのダウンロード、インストール、最初の変換までを短時間で確認するための導入ガイドです。">
+  <meta name="theme-color" content="#f4f6f8">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="RubiMorph 1.0.0 使用ガイド">
+  <meta property="og:description" content="RubiMorphのダウンロード、インストール、最初の変換までを案内します。">
+  <meta property="og:url" content="https://www.tadatsune.com/RubiMorph/guide.html">
+  <meta property="og:image" content="https://www.tadatsune.com/RubiMorph/assets/rubimorph-guide.png">
+  <meta name="twitter:card" content="summary">
+  <link rel="icon" href="assets/rubimorph-guide.ico">
+  <link rel="apple-touch-icon" href="assets/rubimorph-guide.png">
+  <link rel="stylesheet" href="rubimorph-guide.css">
+  <script src="rubimorph-guide.js" defer></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="product-link" href="https://www.tadatsune.com/">
+        <img src="assets/rubimorph-guide.png" alt="" width="40" height="40">
+        <span>RubiMorph</span>
+      </a>
+      <nav aria-label="ページ内メニュー">
+        <a href="#download">ダウンロード</a>
+        <a href="#install">インストール</a>
+        <a href="#first-text">最初の変換</a>
+        <a href="#file">ファイル変換</a>
+        <a href="#custom">カスタム形式</a>
+        <a href="#faq">FAQ</a>
+        <a href="/RubiMorph/manual.html">操作マニュアル</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="page-intro">
+      <h1>RubiMorph 使用ガイド</h1>
+      <p>このページは、RubiMorphをダウンロードして最初の変換を完了するための導入ガイドです。</p>
+      <p>RubiMorphは、カクヨム、なろう、pixiv小説、青空文庫、HTML、Markdown、プレーンテキストなどの間で、ルビ・傍点・注記の記法を変換するWindows用ソフトです。</p>
+      <p>変換処理は手元のPC上で行います。原稿本文を外部サーバーへ送信しません。</p>
+      <p>個別機能、全オプション、エラー対応は <a href="/RubiMorph/manual.html">操作マニュアル</a> を確認してください。</p>
+    </section>
+
+    <section id="download" class="section">
+      <h2>ダウンロード</h2>
+      <div class="release-panel" aria-live="polite">
+        <p id="release-status" class="release-status">最新版をGitHub Releasesで公開しています。</p>
+        <p id="release-date" class="release-date"></p>
+        <p id="release-tag" class="release-date"></p>
+        <div class="download-grid">
+          <a id="installer-link" class="download-card primary" href="https://github.com/TadatsuneSakamoto/RubiMorph/releases/latest" target="_blank" rel="noopener noreferrer">
+            <strong id="installer-name">Windowsインストーラー版</strong>
+            <span id="installer-detail">通常はこちらを使用してください。</span>
+          </a>
+          <a id="portable-link" class="download-card" href="https://github.com/TadatsuneSakamoto/RubiMorph/releases/latest" target="_blank" rel="noopener noreferrer">
+            <strong id="portable-name">Portable ZIP版</strong>
+            <span id="portable-detail">インストールせずに使いたい場合はこちら。</span>
+          </a>
+          <a class="download-card" href="https://github.com/TadatsuneSakamoto/RubiMorph/releases/latest" target="_blank" rel="noopener noreferrer">
+            <strong>Releaseページ</strong>
+            <span>SBOM、チェックサム、ライセンス情報も確認できます。</span>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <section id="install" class="section">
+      <h2>インストール</h2>
+      <h3>インストーラー版</h3>
+      <ol>
+        <li><code>RubiMorphSetup-1.0.0.exe</code>を実行します。</li>
+        <li>画面の指示に従ってインストールします。</li>
+        <li>スタートメニューの「RubiMorph」から起動します。</li>
+      </ol>
+      <h3>Portable ZIP版</h3>
+      <ol>
+        <li><code>RubiMorphPortable-1.0.0.zip</code>を任意のフォルダへ展開します。</li>
+        <li>展開先の<code>RubiMorphGUI.exe</code>を実行します。</li>
+        <li><code>_internal</code>フォルダを削除したり、exeだけを移動したりしないでください。</li>
+      </ol>
+    </section>
+
+    <section id="first-text" class="section">
+      <h2>最初のテキスト変換</h2>
+      <ol>
+        <li>「テキスト変換」タブを開きます。</li>
+        <li>変換元と変換先を選びます。</li>
+        <li>左側の入力欄に原稿を貼り付けます。</li>
+        <li>「変換」を押します。</li>
+        <li>下部のステータスで成功、警告、失敗を確認します。</li>
+        <li>必要なら「詳細...」でログと警告全文を確認します。</li>
+        <li>結果欄の「コピー」で変換結果をクリップボードへコピーします。</li>
+      </ol>
+      <p>「ルビ出力」は、変換先がプレーンテキストの場合だけ有効になります。HTML、カクヨム、なろう、カスタム形式などでは対象外として表示されます。</p>
+    </section>
+
+    <section id="file" class="section">
+      <h2>最初のファイル変換</h2>
+      <ol>
+        <li>「ファイル変換」タブを開きます。</li>
+        <li>単一ファイル、複数ファイル、フォルダ一括のいずれかを選びます。</li>
+        <li>入力ファイルまたは入力フォルダを選びます。</li>
+        <li>出力先を選びます。</li>
+        <li>変換を実行し、下部ステータスで処理件数と警告件数を確認します。</li>
+      </ol>
+      <p>入力はUTF-8の<code>.txt</code>と<code>.md</code>を想定しています。変換後は投稿前に必ず目視確認してください。</p>
+    </section>
+
+    <section id="custom" class="section">
+      <h2>カスタム形式</h2>
+      <p>カスタム形式プロファイルを使うと、独自のルビ記法や傍点記法を変換元・変換先として追加できます。</p>
+      <p>まずはサンプル一式をダウンロードして試すのがおすすめです。</p>
+      <p><a class="download-card primary" href="/RubiMorph/samples/RubiMorph_Custom_Profile_Samples.zip">カスタム形式サンプルZIPをダウンロード</a></p>
+      <p>詳しいインポート手順、検証、逆変換確認は <a href="/RubiMorph/manual.html#custom-sample">操作マニュアルの「カスタム形式サンプルを試す」</a> を確認してください。</p>
+    </section>
+
+    <section id="faq" class="section">
+      <h2>よくある最初の疑問</h2>
+      <h3>原稿はサーバーへ送信されますか</h3>
+      <p>送信されません。RubiMorphはローカルPC上で変換します。</p>
+      <h3>Pythonのインストールは必要ですか</h3>
+      <p>インストーラー版とPortable ZIP版には実行に必要なランタイムが含まれています。通常利用では不要です。</p>
+      <h3>警告が出たら変換は失敗ですか</h3>
+      <p>警告ありの完了は、変換は終わったものの確認が必要な状態です。ステータスの件数と「詳細...」の内容を確認してください。</p>
+      <h3>細かな設定やCLIはどこを見ればよいですか</h3>
+      <p><a href="/RubiMorph/manual.html">操作マニュアル</a>に、画面項目、CLI全オプション、保存場所、制限事項、トラブル対応をまとめています。</p>
+    </section>
+  </main>
+</body>
+</html>

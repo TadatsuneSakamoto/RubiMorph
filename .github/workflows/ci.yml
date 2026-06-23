@@ -1,0 +1,69 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: pwsh
+
+jobs:
+  windows:
+    name: Windows tests and exe build
+    runs-on: windows-2022
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.14.3"
+          architecture: "x64"
+
+      - name: Install build dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-build.txt
+
+      - name: Run public tree check
+        run: |
+          python scripts\check_public_tree.py --all-files
+
+      - name: Run tests and source checks
+        run: |
+          cmd /c scripts\run_tests.cmd
+          if ($LASTEXITCODE -ne 0) { throw "scripts\run_tests.cmd failed." }
+          python -m compileall -q src tests
+          python src\cli\rubimorph.py --version
+          python src\cli\rubimorph.py --list-platforms
+          python src\cli\rubimorph.py --matrix
+
+      - name: Build Windows executables
+        run: |
+          cmd /c scripts\build_exe.cmd
+          if ($LASTEXITCODE -ne 0) { throw "scripts\build_exe.cmd failed." }
+          $required = @(
+            "dist\RubiMorph\RubiMorph.exe",
+            "dist\RubiMorph\RubiMorphGUI.exe",
+            "dist\RubiMorph\LICENSE",
+            "dist\RubiMorph\THIRD_PARTY_NOTICES.md",
+            "dist\RubiMorph\LICENSES\Python-3.14.3-LICENSE.txt"
+          )
+          foreach ($path in $required) {
+            if (-not (Test-Path $path -PathType Leaf)) {
+              throw "Missing build output: $path"
+            }
+          }
+          if (-not (Get-ChildItem -LiteralPath "dist\RubiMorph\_internal" -Filter "python*.dll" -File)) {
+            throw "Missing python*.dll under dist\RubiMorph\_internal."
+          }

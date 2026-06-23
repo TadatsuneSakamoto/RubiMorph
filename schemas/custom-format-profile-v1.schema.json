@@ -1,0 +1,105 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/TadatsuneSakamoto/RubiMorph/schemas/custom-format-profile-v1.schema.json",
+  "title": "RubiMorph Custom Format Profile v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "profile_id", "name", "capabilities"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "profile_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$"
+    },
+    "name": { "type": "string", "minLength": 1 },
+    "description": { "type": "string" },
+    "enabled": { "type": "boolean", "default": true },
+    "capabilities": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["input", "output"],
+      "properties": {
+        "input": { "type": "boolean" },
+        "output": { "type": "boolean" }
+      }
+    },
+    "parser": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rules"],
+      "properties": {
+        "rules": {
+          "type": "array",
+          "maxItems": 100,
+          "items": { "$ref": "#/$defs/parserRule" }
+        }
+      }
+    },
+    "renderer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["templates"],
+      "properties": {
+        "templates": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "ruby": { "type": "string", "maxLength": 512 },
+            "emphasis": { "type": "string", "maxLength": 512 }
+          }
+        }
+      }
+    },
+    "transforms": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "before_parse": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/transformRule" }
+        },
+        "after_render": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/transformRule" }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "flags": {
+      "type": "array",
+      "items": {
+        "enum": ["IGNORECASE", "MULTILINE", "DOTALL", "ASCII"]
+      },
+      "uniqueItems": true
+    },
+    "parserRule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "priority", "pattern"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "name": { "type": "string" },
+        "kind": { "enum": ["ruby", "emphasis"] },
+        "enabled": { "type": "boolean", "default": true },
+        "priority": { "type": "integer" },
+        "pattern": { "type": "string", "minLength": 1, "maxLength": 512 },
+        "flags": { "$ref": "#/$defs/flags" }
+      }
+    },
+    "transformRule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type", "pattern", "replacement"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "name": { "type": "string" },
+        "enabled": { "type": "boolean", "default": true },
+        "type": { "enum": ["literal", "regex"] },
+        "pattern": { "type": "string", "minLength": 1, "maxLength": 512 },
+        "replacement": { "type": "string", "maxLength": 1024 },
+        "flags": { "$ref": "#/$defs/flags" }
+      }
+    }
+  }
+}

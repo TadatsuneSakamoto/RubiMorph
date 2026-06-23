@@ -1,0 +1,216 @@
+name: Build and publish Windows release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write
+
+defaults:
+  run:
+    shell: pwsh
+
+jobs:
+  windows-release:
+    name: Build Windows release
+    runs-on: windows-2022
+
+    steps:
+      - name: Checkout tag
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.14.3"
+          architecture: "x64"
+
+      - name: Log Python details
+        run: |
+          python --version
+          python -c "import platform; print(platform.architecture())"
+
+      - name: Validate version and tag
+        run: |
+          $version = (Get-Content -LiteralPath VERSION -Raw -Encoding UTF8).Trim()
+          $tag = $env:GITHUB_REF_NAME
+          if ($tag -notmatch '^v\d+\.\d+\.\d+$') {
+            throw "Tag '$tag' does not match vX.Y.Z."
+          }
+          if ($tag -ne "v$version") {
+            throw "VERSION ($version) does not match tag ($tag)."
+          }
+          $pyprojectVersion = Select-String -Path pyproject.toml -Pattern '^version\s*=\s*"([^"]+)"' |
+            ForEach-Object { $_.Matches[0].Groups[1].Value } |
+            Select-Object -First 1
+          if ($pyprojectVersion -and $pyprojectVersion -ne $version) {
+            throw "pyproject.toml version ($pyprojectVersion) does not match VERSION ($version)."
+          }
+          "RUBIMORPH_VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          "RUBIMORPH_TAG=$tag" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          "Validated $tag for VERSION $version"
+
+      - name: Ensure release does not already exist
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh --version
+          $releaseOutput = gh release view $env:RUBIMORPH_TAG --repo $env:GITHUB_REPOSITORY 2>&1
+          $viewExitCode = $LASTEXITCODE
+          if ($viewExitCode -eq 0) {
+            throw "Release $env:RUBIMORPH_TAG already exists. Refusing to update or overwrite it."
+          }
+          if ($viewExitCode -ne 1) {
+            throw "Could not check release $env:RUBIMORPH_TAG. gh exited with $viewExitCode. $releaseOutput"
+          }
+          $global:LASTEXITCODE = 0
+          "Release $env:RUBIMORPH_TAG does not exist yet."
+
+      - name: Install build dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-build.txt
+          python -m PyInstaller --version
+          cyclonedx-py --version
+
+      - name: Run public tree check
+        run: |
+          python scripts\check_public_tree.py --all-files
+
+      - name: Ensure Inno Setup compiler
+        run: |
+          $candidatePaths = @(
+            "C:\Program Files\Inno Setup 7\ISCC.exe",
+            "C:\Program Files\Inno Setup 6\ISCC.exe",
+            "C:\Program Files (x86)\Inno Setup 7\ISCC.exe",
+            "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
+          )
+          $iscc = Get-Command iscc -ErrorAction SilentlyContinue
+          if (-not $iscc) {
+            $isccPath = $candidatePaths | Where-Object { Test-Path $_ } | Select-Object -First 1
+            if ($isccPath) {
+              $iscc = Get-Item $isccPath
+            }
+          }
+          if (-not $iscc) {
+            choco install innosetup -y --no-progress
+            $iscc = Get-Command iscc -ErrorAction SilentlyContinue
+            if (-not $iscc) {
+              $isccPath = $candidatePaths | Where-Object { Test-Path $_ } | Select-Object -First 1
+              if ($isccPath) {
+                $iscc = Get-Item $isccPath
+              }
+            }
+          }
+          if (-not $iscc) {
+            throw "ISCC.exe was not found after checking common paths and Chocolatey installation."
+          }
+          "Using Inno Setup compiler: $($iscc.Source ?? $iscc.FullName)"
+
+      - name: Run tests and source CLI checks
+        run: |
+          cmd /c scripts\run_tests.cmd
+          if ($LASTEXITCODE -ne 0) { throw "scripts\run_tests.cmd failed." }
+          python -m compileall -q src tests
+          python src\cli\rubimorph.py --version
+          python src\cli\rubimorph.py --list-platforms
+          python src\cli\rubimorph.py --matrix
+          python src\cli\rubimorph.py --from kakuyomu --to pixiv --text "これは｜禁猟の園《きんりょうのその》です。"
+
+      - name: Build PyInstaller executables
+        run: |
+          cmd /c scripts\build_exe.cmd
+          if ($LASTEXITCODE -ne 0) { throw "scripts\build_exe.cmd failed." }
+          $required = @(
+            "dist\RubiMorph\RubiMorph.exe",
+            "dist\RubiMorph\RubiMorphGUI.exe"
+          )
+          foreach ($path in $required) {
+            if (-not (Test-Path $path -PathType Leaf)) {
+              throw "Missing executable: $path"
+            }
+          }
+          if (-not (Get-ChildItem -LiteralPath "dist\RubiMorph\_internal" -Filter "python*.dll" -File)) {
+            throw "Missing python*.dll under dist\RubiMorph\_internal."
+          }
+          dist\RubiMorph\RubiMorph.exe --version
+          dist\RubiMorph\RubiMorph.exe --list-platforms
+          dist\RubiMorph\RubiMorph.exe --matrix
+
+      - name: Verify executable subsystems
+        run: |
+          function Get-PeSubsystem {
+            param([string]$Path)
+            $bytes = [System.IO.File]::ReadAllBytes((Resolve-Path $Path))
+            $peOffset = [BitConverter]::ToInt32($bytes, 0x3c)
+            $optionalHeaderOffset = $peOffset + 24
+            return [BitConverter]::ToUInt16($bytes, $optionalHeaderOffset + 0x44)
+          }
+          $cliSubsystem = Get-PeSubsystem "dist\RubiMorph\RubiMorph.exe"
+          $guiSubsystem = Get-PeSubsystem "dist\RubiMorph\RubiMorphGUI.exe"
+          if ($cliSubsystem -ne 3) {
+            throw "RubiMorph.exe subsystem was $cliSubsystem; expected 3 (Windows CUI)."
+          }
+          if ($guiSubsystem -ne 2) {
+            throw "RubiMorphGUI.exe subsystem was $guiSubsystem; expected 2 (Windows GUI)."
+          }
+          "RubiMorph.exe subsystem: $cliSubsystem"
+          "RubiMorphGUI.exe subsystem: $guiSubsystem"
+
+      - name: Build installer
+        run: |
+          cmd /c scripts\build_installer.cmd
+          if ($LASTEXITCODE -ne 0) { throw "scripts\build_installer.cmd failed." }
+          $installer = "dist\installer\RubiMorphSetup-$env:RUBIMORPH_VERSION.exe"
+          if (-not (Test-Path $installer -PathType Leaf)) {
+            throw "Missing installer: $installer"
+          }
+          if ((Get-Item $installer).Length -le 0) {
+            throw "Installer is empty: $installer"
+          }
+          Get-Item $installer | Select-Object FullName, Length
+
+      - name: Prepare release assets
+        run: |
+          .\scripts\prepare_release_assets.ps1 -Version $env:RUBIMORPH_VERSION
+          $required = @(
+            "release\RubiMorphSetup-$env:RUBIMORPH_VERSION.exe",
+            "release\RubiMorphPortable-$env:RUBIMORPH_VERSION.zip",
+            "release\RubiMorphThirdPartyLicenses-$env:RUBIMORPH_VERSION.zip",
+            "release\SHA256SUMS.txt",
+            "release\LICENSE",
+            "release\THIRD_PARTY_NOTICES.md",
+            "release\rubimorph.cdx.json",
+            "release\release-notes.md"
+          )
+          foreach ($path in $required) {
+            if (-not (Test-Path $path -PathType Leaf)) {
+              throw "Missing release asset: $path"
+            }
+          }
+          Get-Content -LiteralPath release\SHA256SUMS.txt
+          python scripts\check_public_tree.py release --all-files
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $assets = @(
+            "release\RubiMorphSetup-$env:RUBIMORPH_VERSION.exe",
+            "release\RubiMorphPortable-$env:RUBIMORPH_VERSION.zip",
+            "release\RubiMorphThirdPartyLicenses-$env:RUBIMORPH_VERSION.zip",
+            "release\SHA256SUMS.txt",
+            "release\LICENSE",
+            "release\THIRD_PARTY_NOTICES.md",
+            "release\rubimorph.cdx.json"
+          )
+          gh release create $env:RUBIMORPH_TAG @assets `
+            --repo $env:GITHUB_REPOSITORY `
+            --title "RubiMorph $env:RUBIMORPH_VERSION" `
+            --notes-file release\release-notes.md `
+            --verify-tag `
+            --latest

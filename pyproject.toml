@@ -1,0 +1,13 @@
+[project]
+name = "rubimorph"
+version = "1.0.0"
+description = "Local-first converter for Japanese novel posting markup such as ruby, emphasis, and annotations."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Tadatsune Sakamoto" }]
+dependencies = []
+
+[tool.rubimorph]
+product-name = "RubiMorph"
+current-repository = "https://github.com/TadatsuneSakamoto/RubiMorph"

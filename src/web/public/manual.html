@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RubiMorph 1.0.0 操作マニュアル</title>
+  <meta name="description" content="RubiMorph 1.0.0のGUI、ファイル変換、カスタム形式、CLI、ログ、警告、トラブル対応を調べるための操作マニュアルです。">
+  <link rel="icon" href="/RubiMorph/assets/rubimorph-guide.ico">
+  <link rel="stylesheet" href="rubimorph-manual.css">
+</head>
+<body>
+  <header class="site-header" id="top">
+    <div class="site-header__inner">
+      <p class="eyebrow">RubiMorph 1.0.0</p>
+      <h1>RubiMorph 1.0.0 操作マニュアル</h1>
+      <p class="lead">このページは、個別機能や設定を正確に調べるための詳細資料です。導入と最初の変換は使用ガイドを確認してください。</p>
+      <ul class="header-links">
+        <li><a class="button-link primary" href="/RubiMorph/guide.html">使用ガイド</a></li>
+        <li><a class="button-link" href="https://www.tadatsune.com/">サイトトップ</a></li>
+        <li><a class="button-link" href="https://github.com/TadatsuneSakamoto/RubiMorph/releases/latest">最新版とRelease</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <main class="manual-layout">
+    <nav class="toc" id="toc" aria-label="目次">
+      <h2>目次</h2>
+      <ol>
+        <li><a href="#overview">概要</a></li>
+        <li><a href="#layout">画面構成</a></li>
+        <li><a href="#ruby-output">ルビ出力</a></li>
+        <li><a href="#status">ステータス、ログ、警告</a></li>
+        <li><a href="#text">テキスト変換</a></li>
+        <li><a href="#files">ファイル変換</a></li>
+        <li><a href="#custom">カスタム形式</a></li>
+        <li><a href="#custom-sample">カスタム形式サンプルを試す</a></li>
+        <li><a href="#cli">CLI</a></li>
+        <li><a href="#storage">保存場所とバックアップ</a></li>
+        <li><a href="#limits">制限事項</a></li>
+        <li><a href="#trouble">エラーとトラブル対応</a></li>
+        <li><a href="#update">更新とアンインストール</a></li>
+      </ol>
+    </nav>
+
+    <article class="manual-content">
+      <section id="overview">
+        <h2>概要</h2>
+        <p class="back-to-toc"><a href="#toc">目次へ戻る</a></p>
+        <p>RubiMorphは、Web小説投稿サイトや文書形式ごとに異なるルビ・傍点・注記の記法を変換するWindows用ソフトです。</p>
+        <p>GUIとCLIの両方に対応します。変換処理はローカルPC上で行い、原稿本文を外部サーバーへ送信しません。</p>
+        <p>インストール、Portable版、最初の変換だけを短く確認したい場合は <a href="/RubiMorph/guide.html">使用ガイド</a> を参照してください。</p>
+      </section>
+
+      <section id="layout">
+        <h2>画面構成</h2>
+        <p class="back-to-toc"><a href="#toc">目次へ戻る</a></p>
+        <div class="table-wrap"><table>
+          <tr><th>領域</th><th>役割</th></tr>
+          <tr><td>形式設定</td><td>変換元、変換先、プレーンテキスト用のルビ出力を選択します。</td></tr>
+          <tr><td>テキスト変換</td><td>入力欄に貼り付けた本文を変換し、結果欄へ表示します。</td></tr>
+          <tr><td>ファイル変換</td><td>単一ファイル、複数ファイル、フォルダ一括を選んで変換します。</td></tr>
+          <tr><td>ステータス領域</td><td>直前の処理結果、警告件数、詳細ボタンを表示します。</td></tr>
+          <tr><td>カスタム形式メニュー</td><td>プロファイルの管理、インポート、再読み込みを行います。</td></tr>
+          <tr><td>ヘルプメニュー</td><td>使用ガイド、操作マニュアル、公式サイト、Release、OSSライセンス、バージョン情報を開きます。</td></tr>
+        </table></div>
+      </section>
+
+      <section id="ruby-output">
+        <h2>ルビ出力</h2>
+        <p class="back-to-toc"><a href="#toc">目次へ戻る</a></p>
+        <p>「ルビ出力」は、変換先がプレーンテキストの場合だけ有効です。プレーンテキスト以外では「対象外」と表示され、操作できません。</p>
+        <div class="table-wrap"><table>
+          <tr><th>変換先</th><th>表示</th><th>変換時の扱い</th></tr>
+          <tr><td>プレーンテキスト</td><td>有効</td><td>「ルビを削除」または「親文字（ルビ）で残す」を使用します。</td></tr>
+          <tr><td>HTML、カクヨム、なろう、pixiv小説、青空文庫、Markdown</td><td>対象外</td><td>各形式のrendererが固定の記法で出力します。</td></tr>
+          <tr><td>カスタム形式</td><td>対象外</td><td>プロファイルの出力テンプレートがルビ記法を決定します。</td></tr>
+        </table></div>
+        <p>プレーンテキストへ戻すと、前回選んでいた有効値が復元されます。テキスト変換とファイル変換は同じ判定を使います。</p>
+      </section>
+
+      <section id="status">
+        <h2>ステータス、ログ、警告</h2>
+        <p class="back-to-toc"><a href="#toc">目次へ戻る</a></p>
+        <p>メイン画面下部には、直前の操作結果が短く表示されます。</p>
+        <div class="table-wrap"><table>
+          <tr><th>状態</th><th>例</th></tr>
+          <tr><td>成功</td><td>変換が完了しました。 / 3ファイルを変換しました。 / 結果をクリップボードへコピーしました。</td></tr>
+          <tr><td>警告あり</td><td>変換が完了しました。警告が2件あります。重要な警告の短い概要</td></tr>
+          <tr><td>失敗</td><td>変換できませんでした。詳細を確認してください。</td></tr>
+        </table></div>
+        <p>詳細ボタンを開くと、変換ログ、警告全文、対象ファイル、内部診断を選択・コピーできます。メイン画面は短い概要、詳細ウィンドウは全文という役割分担です。</p>
+        <p>新しい操作を実行すると、メイン画面の表示はその操作結果へ更新されます。過去の警告は現在の警告件数としては残りません。</p>
+      </section>
+
+      <section id="text">
+        <h2>テキスト変換</h2>
+        <p class="back-to-toc"><a href="#toc">目次へ戻る</a></p>
+        <ol>
+          <li>変換元と変換先を選びます。</li>
+          <li>入力欄に本文を貼り付けます。</li>
+          <li>必要に応じて「ルビ出力」を選びます。</li>
+          <li>「変換」を押します。</li>
+          <li>結果欄とステータスを確認します。</li>
+          <li>必要なら「コピー」で結果をクリップボードへ送ります。</li>
+        </ol>
+        <p>変換元と変換先のどちらかにカスタム形式を使う場合は、先にカスタム形式管理画面でプロファイルを登録・有効化してください。</p>
+      </section>
+
+      <section id="files">
+        <h2>ファイル変換</h2>
+        <p class="back-to-toc"><a href="#toc">目次へ戻る</a></p>
+        <h3>単一ファイル</h3>
+        <p>入力ファイルと出力先を選び、1ファイルだけを変換します。入力と同じパスを出力先にした場合は、上書きを避けるため変換済みファイル名へ退避します。</p>
+        <h3>複数ファイル</h3>
+        <p>選択した<code>.txt</code>または<code>.md</code>を、指定した出力フォルダへ変換します。対象外拡張子は変換対象に含めません。</p>
+        <h3>フォルダ一括</h3>
+        <p>入力フォルダ配下の<code>.txt</code>と<code>.md</code>を再帰的に探し、サブフォルダ構造を保って出力します。</p>
+      </section>
+
+      <section id="custom">
+        <h2>カスタム形式</h2>
+        <p class="back-to-toc"><a href="#toc">目次へ戻る</a></p>
+        <p>カスタム形式プロファイルは、独自記法を入力形式または出力形式として追加するUTF-8 JSONファイルです。任意のPython、JavaScript、シェル、外部プログラムは実行しません。</p>
+        <div class="table-wrap"><table>
+          <tr><th>操作</th><th>役割</th></tr>
+          <tr><td>新規作成</td><td>プロファイルを作成して保存します。</td></tr>
+          <tr><td>編集・複製</td><td>既存プロファイルを変更またはコピーします。</td></tr>
+          <tr><td>検証</td><td>JSON構造、正規表現、テンプレート、上限値を確認します。</td></tr>
+          <tr><td>有効化・無効化</td><td>変換元・変換先一覧に表示するかを切り替えます。</td></tr>
+          <tr><td>インポート・エクスポート</td><td>外部ファイルと登録済みプロファイルをやり取りします。</td></tr>
+          <tr><td>削除</td><td>登録済みプロファイルを削除します。</td></tr>
+        </table></div>
+        <p>仕様の詳細は配布物内の<code>docs/custom-format-profiles.md</code>も参照できます。</p>
+      </section>
+
+      <section id="custom-sample">
+        <h2>カスタム形式サンプルを試す</h2>
+        <p class="back-to-toc"><a href="#toc">目次へ戻る</a></p>
+        <p><a class="button-link primary" href="/RubiMorph/samples/RubiMorph_Custom_Profile_Samples.zip">サンプル一式をダウンロード</a></p>
+        <div class="table-wrap"><table>
+          <tr><th>ファイル</th><th>役割</th></tr>
+          <tr><td><a href="/RubiMorph/samples/example-bracket-format.rubimorph-profile.json">example-bracket-format.rubimorph-profile.json</a></td><td>サンプルプロファイル</td></tr>
+          <tr><td><a href="/RubiMorph/samples/example-input.txt">example-input.txt</a></td><td>短い確認用入力</td></tr>
+          <tr><td><a href="/RubiMorph/samples/example-expected-output.txt">example-expected-output.txt</a></td><td>確認用入力の期待結果</td></tr>
+          <tr><td><a href="/RubiMorph/samples/author-work-sample-kakuyomu.txt">author-work-sample-kakuyomu.txt</a></td><td>カクヨム形式の小説本文サンプル</td></tr>
+          <tr><td><a href="/RubiMorph/samples/author-work-sample-custom-format.txt">author-work-sample-custom-format.txt</a></td><td>RubiMorphで生成したカスタム形式結果</td></tr>
+          <tr><td><a href="/RubiMorph/samples/author-work-sample-roundtrip-kakuyomu.txt">author-work-sample-roundtrip-kakuyomu.txt</a></td><td>逆変換で生成したカクヨム形式結果</td></tr>
+        </table></div>
+        <ol>
+          <li>サンプル一式をダウンロードして展開します。</li>
+          <li>RubiMorphで「カスタム形式」メニューを開きます。</li>
+          <li>カスタム形式管理画面を開きます。</li>
+          <li><code>example-bracket-format.rubimorph-profile.json</code>をインポートします。</li>
+          <li>「検証」を実行します。</li>
+          <li>登録済みプロファイルを有効化します。</li>
+          <li>変換元に「カクヨム」を選びます。</li>
+          <li>変換先に「カスタム: Example Bracket Format」を選びます。</li>
+          <li><code>author-work-sample-kakuyomu.txt</code>を変換します。</li>
+          <li><code>author-work-sample-custom-format.txt</code>と比較します。</li>
+          <li>必要に応じて、変換元を「カスタム: Example Bracket Format」、変換先を「カクヨム」にして逆変換します。</li>
+          <li><code>author-work-sample-roundtrip-kakuyomu.txt</code>および原文と一致することを確認します。</li>
+        </ol>
+        <p>サンプル本文のクレジット: 著者: 坂本忠恆 / 用途: RubiMorphの記法変換サンプル / 坂本忠恆による小説本文の抜粋</p>
+      </section>
+
+      <section id="cli">
+        <h2>CLI</h2>
+        <p class="back-to-toc"><a href="#toc">目次へ戻る</a></p>
+        <div class="code-wrap"><pre><code>RubiMorph.exe --version
+RubiMorph.exe --list-platforms
+RubiMorph.exe --matrix
+RubiMorph.exe --validate-profile profile.rubimorph-profile.json
+RubiMorph.exe --from kakuyomu --to html --text "本文"
+RubiMorph.exe --from kakuyomu --to plain --plain-ruby-mode remove --input input.txt --output output.txt
+RubiMorph.exe --from kakuyomu --to plain --plain-ruby-mode parentheses --input input.txt --output output.txt
+RubiMorph.exe --from kakuyomu --to-profile profile.rubimorph-profile.json --input input.txt --output output.txt
+RubiMorph.exe --from-profile profile.rubimorph-profile.json --to kakuyomu --input input.txt --output output.txt
+RubiMorph.exe --from kakuyomu --to html --input-dir input_folder --output-dir output_folder
+RubiMorph.exe --from kakuyomu --to html --input input.txt --output output.txt --dry-run
+RubiMorph.exe --from kakuyomu --to html --input input.txt --output output.txt --report report.json</code></pre></div>
+        <p><code>--from</code>と<code>--from-profile</code>、<code>--to</code>と<code>--to-profile</code>は同時に指定できません。<code>--plain-ruby-mode</code>はプレーンテキスト出力時のルビ扱いです。</p>
+      </section>
+
+      <section id="storage">
+        <h2>保存場所とバックアップ</h2>
+        <p class="back-to-toc"><a href="#toc">目次へ戻る</a></p>
+        <p>登録済みカスタム形式プロファイルは通常、次の場所に保存されます。</p>
+        <div class="code-wrap"><pre><code>%APPDATA%\RubiMorph\profiles</code></pre></div>
+        <p>重要なプロファイルは、管理画面のエクスポート機能またはフォルダのコピーでバックアップしてください。</p>
+      </section>
+
+      <section id="limits">
+        <h2>制限事項</h2>
+        <p class="back-to-toc"><a href="#toc">目次へ戻る</a></p>
+        <ul>
+          <li>投稿サイト側の仕様変更により、変換結果が期待と異なる場合があります。</li>
+          <li>情報量の少ない形式へ変換すると、傍点、注記、HTML構造などが失われる場合があります。</li>
+          <li>カスタム形式プロファイルにはサイズ、規則数、正規表現長、テンプレート長の上限があります。</li>
+          <li>変換後の原稿は投稿前に必ず目視確認してください。</li>
+        </ul>
+      </section>
+
+      <section id="trouble">
+        <h2>エラーとトラブル対応</h2>
+        <p class="back-to-toc"><a href="#toc">目次へ戻る</a></p>
+        <div class="table-wrap"><table>
+          <tr><th>状況</th><th>確認すること</th></tr>
+          <tr><td>起動できない</td><td>Portable版で<code>_internal</code>を削除していないか確認します。</td></tr>
+          <tr><td>変換できない</td><td>ステータスと「詳細...」のログを確認します。</td></tr>
+          <tr><td>警告が出る</td><td>警告件数と詳細内容を確認し、投稿前に変換結果を目視確認します。</td></tr>
+          <tr><td>カスタム形式が一覧に出ない</td><td>プロファイルが検証済み、有効、該当capabilityありか確認します。</td></tr>
+          <tr><td>Webページが開けない</td><td>ブラウザまたはネットワーク設定を確認し、表示されたURLを手動で開きます。</td></tr>
+        </table></div>
+      </section>
+
+      <section id="update">
+        <h2>更新とアンインストール</h2>
+        <p class="back-to-toc"><a href="#toc">目次へ戻る</a></p>
+        <p>最新版は <a href="https://github.com/TadatsuneSakamoto/RubiMorph/releases/latest">GitHub Releases</a> で確認できます。インストーラー版は新しいインストーラーを実行して更新します。</p>
+        <p>Portable版は新しいZIPを別フォルダへ展開し、必要なプロファイルや作業ファイルを移してください。</p>
+        <p>アンインストール前に、必要なカスタム形式プロファイルをバックアップしてください。</p>
+      </section>
+    </article>
+  </main>
+</body>
+</html>

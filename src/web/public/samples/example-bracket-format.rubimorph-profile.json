@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "profile_id": "example-bracket-format",
+  "name": "Example Bracket Format",
+  "description": "サンプルの角括弧形式です。",
+  "capabilities": {
+    "input": true,
+    "output": true
+  },
+  "parser": {
+    "rules": [
+      {
+        "id": "ruby",
+        "name": "ルビ",
+        "kind": "ruby",
+        "enabled": true,
+        "priority": 100,
+        "pattern": "\\[\\[ruby:(?P<base>.+?)\\|(?P<reading>.+?)\\]\\]",
+        "flags": []
+      },
+      {
+        "id": "emphasis",
+        "name": "傍点",
+        "kind": "emphasis",
+        "enabled": true,
+        "priority": 90,
+        "pattern": "\\[\\[em:(?P<text>.+?)\\]\\]",
+        "flags": []
+      }
+    ]
+  },
+  "renderer": {
+    "templates": {
+      "ruby": "[[ruby:{base}|{reading}]]",
+      "emphasis": "[[em:{text}]]"
+    }
+  },
+  "transforms": {
+    "before_parse": [
+      {
+        "id": "normalize-ruby-name",
+        "name": "rubyタグ名を正規化",
+        "enabled": true,
+        "type": "literal",
+        "pattern": "[[rb:",
+        "replacement": "[[ruby:",
+        "flags": []
+      }
+    ],
+    "after_render": [
+      {
+        "id": "normalize-blank-lines",
+        "name": "空行を整理",
+        "enabled": true,
+        "type": "regex",
+        "pattern": "\\n{3,}",
+        "replacement": "\\n\\n",
+        "flags": []
+      }
+    ]
+  }
+}
